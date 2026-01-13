@@ -6,36 +6,57 @@ import './App.module.css';
 import ErrorMessage from '../ErrorMessage/ErrorMessage';
 import MovieGrid from '../MovieGrid/MovieGrid';
 import { useState } from 'react';
+import Loader from '../Loader/Loader';
+import MovieModal from '../MovieModal/MovieModal';
 
 const notify = () => toast.error('No movies found for your request.');
+type Status = 'success' | 'empty' | 'error';
 
 export default function App() {
-  const [isSuccess, setIsSuccess] = useState(true);
+  const [status, setStatus] = useState<Status>('empty');
   const [movies, setMovies] = useState<Movie[]>([]);
+  const [loader, setLoader] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
 
   async function handleForm(query: string) {
+    setLoader(true);
     try {
       const result: Movie[] = await fetchMovies(query);
       setMovies(result);
-      setIsSuccess(true);
       if (result.length === 0) {
         notify();
+        setStatus('empty');
+      } else {
+        setStatus('success');
       }
     } catch (err) {
-      setIsSuccess(false);
+      setStatus('error');
       setMovies([]);
       console.error(err);
     }
+    setLoader(false);
   }
-  function handleSelect() {}
+  function handleMovieClick(selectedId: number) {
+    setIsModalOpen(true);
+    const movie = movies.filter(movie => movie.id === selectedId);
+    setSelectedMovie(movie[0]);
+  }
+  function handleModalClose() {
+    setIsModalOpen(false);
+    setSelectedMovie(null);
+  }
   return (
     <>
       <SearchBar onSubmit={handleForm} />
       <Toaster />
-      {isSuccess ? (
-        <MovieGrid onSelect={handleSelect} movies={movies} />
-      ) : (
-        <ErrorMessage />
+      {status === 'success' && (
+        <MovieGrid onSelect={handleMovieClick} movies={movies} />
+      )}
+      {status === 'error' && <ErrorMessage />}
+      {loader && <Loader />}
+      {isModalOpen && selectedMovie && (
+        <MovieModal onClose={handleModalClose} movie={selectedMovie} />
       )}
     </>
   );

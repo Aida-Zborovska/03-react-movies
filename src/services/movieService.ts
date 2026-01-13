@@ -19,7 +19,6 @@ export default async function fetchMovies(query: string): Promise<Movie[]> {
     },
   };
   const response = await axios.get<fetchMoviesResponse>(url, options);
-  console.log(response);
 
   return response.data.results;
 }
