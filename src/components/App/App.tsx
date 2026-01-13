@@ -15,12 +15,11 @@ type Status = 'success' | 'empty' | 'error';
 export default function App() {
   const [status, setStatus] = useState<Status>('empty');
   const [movies, setMovies] = useState<Movie[]>([]);
-  const [loader, setLoader] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
 
   async function handleForm(query: string) {
-    setLoader(true);
+    setIsLoading(true);
     try {
       const result: Movie[] = await fetchMovies(query);
       setMovies(result);
@@ -35,17 +34,11 @@ export default function App() {
       setMovies([]);
       console.error(err);
     }
-    setLoader(false);
+    setIsLoading(false);
   }
-  function handleMovieClick(selectedId: number) {
-    setIsModalOpen(true);
-    const movie = movies.filter(movie => movie.id === selectedId);
-    setSelectedMovie(movie[0]);
-  }
-  function handleModalClose() {
-    setIsModalOpen(false);
-    setSelectedMovie(null);
-  }
+  const handleMovieClick = (movie: Movie) => setSelectedMovie(movie);
+  const handleModalClose = () => setSelectedMovie(null);
+
   return (
     <>
       <SearchBar onSubmit={handleForm} />
@@ -54,8 +47,8 @@ export default function App() {
         <MovieGrid onSelect={handleMovieClick} movies={movies} />
       )}
       {status === 'error' && <ErrorMessage />}
-      {loader && <Loader />}
-      {isModalOpen && selectedMovie && (
+      {isLoading && <Loader />}
+      {selectedMovie && (
         <MovieModal onClose={handleModalClose} movie={selectedMovie} />
       )}
     </>
